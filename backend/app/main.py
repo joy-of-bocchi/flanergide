@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import asyncio
 import logging
 import logging.config
 import os
@@ -88,15 +89,72 @@ setup_cors(
     ]
 )
 
-# Add middleware stack
-app.add_middleware(logging_middleware)
-app.add_middleware(add_security_headers)
+# Add middleware stack (order matters - last added runs first)
+from starlette.middleware.base import BaseHTTPMiddleware
+app.middleware("http")(logging_middleware)
+app.middleware("http")(add_security_headers)
 if settings.enable_rate_limiting:
-    app.add_middleware(rate_limit_check_middleware)
+    app.middleware("http")(rate_limit_check_middleware)
 
 # Initialize rate limiter
 if settings.enable_rate_limiting:
     init_rate_limiter(settings.rate_limit_requests_per_minute)
+
+
+# Background task for blog scraper
+async def run_blog_scraper_task():
+    """Background task to run blog scraper periodically."""
+    logger.info("Blog scraper background task started")
+
+    while True:
+        try:
+            if settings.enable_blog_scraper:
+                logger.info("=" * 80)
+                logger.info("Blog scraper: Starting scheduled run")
+                logger.info("=" * 80)
+
+                # Fetch posts from blog
+                posts = await app.state.blog_scraper.fetch_and_parse()
+
+                if posts:
+                    logger.info(f"Blog scraper: Fetched {len(posts)} posts, checking for new content...")
+
+                    # Get existing cached posts to check for duplicates
+                    existing_posts = await app.state.state_manager.get_recent_thoughts()
+                    existing_urls = {post.get("url") for post in existing_posts.get("blog_posts", [])}
+
+                    # Filter only new posts (by URL)
+                    new_posts = [post for post in posts if post.get("url") not in existing_urls]
+
+                    if new_posts:
+                        logger.info(f"Blog scraper: Found {len(new_posts)} new posts, updating cache...")
+
+                        # Update cache with all posts (new + existing will be merged by state manager)
+                        success = await app.state.state_manager.update_blog_cache(
+                            posts,
+                            summarizer=app.state.summarizer
+                        )
+
+                        if success:
+                            logger.info(f"✓ Blog scraper: Successfully processed {len(new_posts)} new posts")
+                        else:
+                            logger.warning("✗ Blog scraper: Cache update failed")
+                    else:
+                        logger.info("Blog scraper: No new posts found, skipping update")
+                else:
+                    logger.warning("Blog scraper: No posts fetched from blog")
+
+                logger.info("=" * 80)
+            else:
+                logger.debug("Blog scraper disabled in config, skipping run")
+
+        except Exception as e:
+            logger.error(f"Blog scraper task error: {e}", exc_info=True)
+
+        # Wait for next run (interval in hours from settings)
+        interval_seconds = settings.blog_scraper_interval_hours * 3600
+        logger.info(f"Blog scraper: Next run in {settings.blog_scraper_interval_hours} hours")
+        await asyncio.sleep(interval_seconds)
 
 
 # Startup and shutdown events
@@ -131,13 +189,20 @@ async def startup_event():
         app.state.blog_scraper = blog_scraper
         logger.info(f"Blog scraper configured for {settings.blog_url}")
 
-        # Summarizer
-        summarizer = Summarizer(settings.openai_api_key)
+        # Summarizer (Ollama)
+        summarizer = Summarizer(settings.ollama_host)
         app.state.summarizer = summarizer
-        logger.info("Summarizer initialized")
+        logger.info(f"Summarizer initialized with Ollama at {settings.ollama_host}")
 
         logger.info("All services initialized successfully")
         logger.info("=" * 80)
+
+        # Start background blog scraper task
+        if settings.enable_blog_scraper:
+            asyncio.create_task(run_blog_scraper_task())
+            logger.info(f"Blog scraper background task scheduled (interval: {settings.blog_scraper_interval_hours}h)")
+        else:
+            logger.info("Blog scraper disabled in config")
 
     except Exception as e:
         logger.error(f"Startup failed: {e}", exc_info=True)

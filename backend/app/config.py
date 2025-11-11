@@ -22,10 +22,10 @@ class Settings(BaseSettings):
     # Blog Configuration
     blog_url: str = Field(..., description="Blog homepage URL (required)")
     enable_blog_scraper: bool = Field(default=True, description="Enable blog scraper")
-    blog_scraper_interval_hours: int = Field(default=4, description="Blog scraper interval in hours")
+    blog_scraper_interval_hours: int = Field(default=48, description="Blog scraper interval in hours")
 
-    # AI/Summarization
-    openai_api_key: str = Field(..., description="OpenAI API key (required)")
+    # AI/Summarization (Ollama)
+    ollama_host: str = Field(default="http://localhost:11434", description="Ollama server URL")
 
     # Storage Paths
     chroma_persist_dir: str = Field(default="./app/storage/chroma_db", description="Chroma persistence directory")

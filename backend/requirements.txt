@@ -13,11 +13,14 @@ python-dotenv==1.0.0
 # Vector Database
 chromadb==0.4.18
 
+# Numpy compatibility (chromadb 0.4.18 needs numpy < 2.0)
+numpy<2.0
+
 # HTTP Client (async)
 httpx==0.25.2
 
 # Authentication & Security
-PyJWT==2.8.1
+PyJWT==2.10.1
 python-jose==3.3.0
 
 # Rate Limiting
@@ -30,8 +33,8 @@ feedparser==6.0.10
 # Date/Time Utilities
 python-dateutil==2.8.2
 
-# AI/Summarization
-openai==1.3.5
+# AI/Summarization (using Ollama - local LLM)
+# Note: httpx is already included above for Ollama API calls
 
 # Logging
 python-json-logger==2.0.7

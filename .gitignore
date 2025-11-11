@@ -110,3 +110,6 @@ ENV/
 
 # Conda
 .conda/
+
+# Claude
+.claude/

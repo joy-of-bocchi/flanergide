@@ -4,7 +4,7 @@ import logging
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from app.api.middleware.auth import extract_device_id, verify_jwt
 from app.config import settings
@@ -35,7 +35,7 @@ async def get_vector_store(request: Request) -> VectorStore:
 
 
 async def get_device_id(
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
 ) -> str:
     """Extract and verify device ID from JWT.
 
@@ -56,7 +56,7 @@ async def get_device_id(
 async def store_event(
     request: Request,
     event: MemoryStoreRequest,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     """Store a new event with embedding.
@@ -105,7 +105,7 @@ async def store_event(
 async def search_memory(
     request: Request,
     search_req: MemorySearchRequest,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     """Semantic search over stored events.
@@ -156,7 +156,7 @@ async def get_recent(
     limit: int = 20,
     offset: int = 0,
     type_filter: Optional[str] = None,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     """Get recent events without semantic search.
@@ -214,7 +214,7 @@ async def get_recent(
 async def delete_event(
     request: Request,
     event_id: str,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     """Delete an event from memory.

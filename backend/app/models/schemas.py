@@ -115,7 +115,7 @@ class MemoryRecentResponse(BaseModel):
 class MoodUpdateRequest(BaseModel):
     """Request to update mood."""
 
-    mood: str = Field(..., regex="^(happy|sad|focused|tired|anxious|neutral)$", description="Mood value")
+    mood: str = Field(..., pattern="^(happy|sad|focused|tired|anxious|neutral)$", description="Mood value")
     context: Optional[str] = Field(default=None, description="Optional context")
 
     class Config:

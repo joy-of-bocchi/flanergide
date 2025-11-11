@@ -6,7 +6,7 @@ from typing import Optional
 
 import jwt
 from fastapi import HTTPException, status
-from fastapi.security import HTTPAuthCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ security = HTTPBearer()
 
 
 async def verify_jwt(
-    credentials: HTTPAuthCredentials,
+    credentials,
     jwt_secret: str,
     jwt_algorithm: str
 ) -> dict:
@@ -168,7 +168,7 @@ async def refresh_access_token(
         )
 
 
-async def extract_device_id(credentials: Optional[HTTPAuthCredentials]) -> Optional[str]:
+async def extract_device_id(credentials) -> Optional[str]:
     """Extract device ID from JWT token without full validation.
 
     Useful for logging and tracking.

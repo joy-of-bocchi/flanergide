@@ -4,7 +4,7 @@ import logging
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from app.api.middleware.auth import verify_jwt
 from app.config import settings
@@ -52,7 +52,7 @@ async def get_state_manager(request: Request) -> StateManager:
 async def sync_pull(
     request: Request,
     pull_req: SyncPullRequest,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
     state_manager: StateManager = Depends(get_state_manager),
 ):
@@ -129,7 +129,7 @@ async def sync_pull(
 async def sync_push(
     request: Request,
     push_req: SyncPushRequest,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     """Push batch of events from phone to server.

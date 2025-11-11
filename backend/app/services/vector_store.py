@@ -20,7 +20,8 @@ class VectorStore:
         Args:
             persist_dir: Directory for Chroma persistence
         """
-        self.client = chromadb.Client(persist_directory=persist_dir)
+        # Use PersistentClient for newer ChromaDB versions
+        self.client = chromadb.PersistentClient(path=persist_dir)
         self.collection = self.client.get_or_create_collection(
             name="events",
             metadata={"hnsw:space": "cosine"}

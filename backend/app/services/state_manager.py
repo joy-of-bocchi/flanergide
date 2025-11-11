@@ -5,7 +5,7 @@ import logging
 import os
 import tempfile
 import time
-from typing import Optional
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -130,39 +130,76 @@ class StateManager:
         """Update blog post cache and thoughts summary.
 
         Args:
-            posts: List of blog posts
+            posts: List of new blog posts to add
             summarizer: Optional summarizer service for summaries
 
         Returns:
             True if successful
         """
         try:
-            # Summarize posts if summarizer provided
+            logger.info(f"[BlogCache] Starting update with {len(posts)} posts")
+
+            # Load existing cached posts
+            existing_posts = []
+            if os.path.exists(self.blog_cache_file):
+                try:
+                    with open(self.blog_cache_file, "r") as f:
+                        existing_posts = json.load(f)
+                    logger.debug(f"[BlogCache] Loaded {len(existing_posts)} existing posts from cache")
+                except Exception as e:
+                    logger.warning(f"[BlogCache] Could not load existing cache: {e}")
+
+            # Merge new posts with existing (deduplicate by URL)
+            existing_urls = {post.get("url") for post in existing_posts}
+            new_posts = [post for post in posts if post.get("url") not in existing_urls]
+
+            if not new_posts:
+                logger.info("[BlogCache] No new posts to add, cache unchanged")
+                return True
+
+            logger.info(f"[BlogCache] Adding {len(new_posts)} new posts to cache")
+
+            # Summarize only new posts if summarizer provided
             if summarizer:
-                posts = await summarizer.summarize_blog_posts(posts)
+                logger.info(f"[BlogCache] Summarizing {len(new_posts)} new posts using AI...")
+                new_posts = await summarizer.summarize_blog_posts(new_posts)
+                logger.info(f"[BlogCache] ✓ Summarization complete")
+            else:
+                logger.debug("[BlogCache] No summarizer provided, skipping summarization")
 
-            # Cache all posts
-            self._atomic_write_json(self.blog_cache_file, posts)
+            # Merge: new posts first, then existing (sorted by timestamp, newest first)
+            all_posts = new_posts + existing_posts
+            all_posts.sort(key=lambda p: p.get("scraped_at", 0), reverse=True)
 
-            # Update thoughts file with latest summaries
+            # Keep only last 50 posts to prevent unbounded growth
+            all_posts = all_posts[:50]
+
+            # Cache merged posts
+            logger.debug(f"[BlogCache] Writing {len(all_posts)} total posts to {self.blog_cache_file}")
+            self._atomic_write_json(self.blog_cache_file, all_posts)
+            logger.info(f"[BlogCache] ✓ Cache file written")
+
+            # Update thoughts file with latest summaries (last 5 posts)
             summaries = []
-            for post in posts[:5]:  # Last 5 posts
+            for i, post in enumerate(all_posts[:5]):
                 title = post.get("title", "Untitled")
                 summary = post.get("summary", post.get("body", "")[:200])
                 url = post.get("url", "")
 
                 summaries.append(f"**{title}**\n{summary}\n[Read more]({url})")
+                logger.debug(f"[BlogCache]   Post {i+1}: {title}")
 
             thoughts_text = "\n\n".join(summaries)
 
+            logger.debug(f"[BlogCache] Writing thoughts to {self.thoughts_file}")
             with open(self.thoughts_file, "w") as f:
                 f.write(thoughts_text)
 
-            logger.info(f"Updated blog cache with {len(posts)} posts")
+            logger.info(f"[BlogCache] ✓ Successfully updated blog cache ({len(new_posts)} new, {len(all_posts)} total)")
             return True
 
         except Exception as e:
-            logger.error(f"Failed to update blog cache: {e}")
+            logger.error(f"[BlogCache] ✗ Failed to update blog cache: {type(e).__name__} - {e}", exc_info=True)
             return False
 
     async def get_current_state(self) -> dict:
@@ -183,7 +220,7 @@ class StateManager:
             "blog_posts": thoughts_data.get("blog_posts", [])
         }
 
-    def _atomic_write_json(self, filepath: str, data: dict | list):
+    def _atomic_write_json(self, filepath: str, data: Union[dict, list]):
         """Write JSON atomically using temp file.
 
         Args:

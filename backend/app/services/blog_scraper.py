@@ -23,6 +23,7 @@ class BlogScraper:
         """
         self.blog_url = blog_url
         self.timeout = 10
+        logger.info(f"BlogScraper initialized for URL: {blog_url}")
 
     async def fetch_and_parse(self) -> list[dict]:
         """Scrape blog and return structured posts.
@@ -58,14 +59,17 @@ class BlogScraper:
                 f"{self.blog_url}/feed",
             ]
 
+            logger.info(f"Attempting to fetch RSS from {len(feed_urls)} possible URLs")
             for feed_url in feed_urls:
                 try:
+                    logger.debug(f"Trying RSS feed at: {feed_url}")
                     async with httpx.AsyncClient(timeout=self.timeout) as client:
                         response = await client.get(feed_url)
                         response.raise_for_status()
 
                     feed = feedparser.parse(response.text)
                     if feed.entries:
+                        logger.info(f"✓ RSS feed found at {feed_url} with {len(feed.entries)} entries")
                         posts = []
                         for entry in feed.entries[:10]:  # Last 10 posts
                             posts.append({
@@ -75,16 +79,20 @@ class BlogScraper:
                                 "published_at": self._parse_date(entry.get("published", int(time.time()))),
                                 "scraped_at": int(time.time())
                             })
+                        logger.info(f"Successfully parsed {len(posts)} posts from RSS")
                         return posts
+                    else:
+                        logger.debug(f"RSS feed at {feed_url} has no entries")
 
                 except Exception as e:
-                    logger.debug(f"RSS feed at {feed_url} not available: {e}")
+                    logger.debug(f"RSS feed at {feed_url} not available: {type(e).__name__} - {e}")
                     continue
 
+            logger.warning(f"No RSS feeds found at any of the {len(feed_urls)} attempted URLs")
             return []
 
         except Exception as e:
-            logger.warning(f"RSS parsing failed: {e}")
+            logger.error(f"RSS parsing failed with critical error: {type(e).__name__} - {e}")
             return []
 
     async def _fetch_html(self) -> list[dict]:
@@ -94,15 +102,21 @@ class BlogScraper:
             List of blog posts extracted from HTML
         """
         try:
+            logger.info(f"Attempting HTML scrape from {self.blog_url}")
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(self.blog_url)
                 response.raise_for_status()
+
+            logger.info(f"✓ Successfully fetched HTML ({len(response.text)} bytes)")
 
             soup = BeautifulSoup(response.text, "html.parser")
             posts = []
 
             # Find post containers (adjust selectors for your blog)
-            for article in soup.find_all(["article", "div.post", "div.blog-post"]):
+            articles = soup.find_all(["article", "div.post", "div.blog-post"])
+            logger.info(f"Found {len(articles)} article containers in HTML")
+
+            for i, article in enumerate(articles):
                 title_elem = article.find(["h1", "h2", "h3"])
                 link_elem = article.find("a")
 
@@ -124,11 +138,13 @@ class BlogScraper:
                         "published_at": int(time.time()),
                         "scraped_at": int(time.time())
                     })
+                    logger.debug(f"  Article {i+1}: '{title}' from {url}")
 
+            logger.info(f"Successfully parsed {len(posts)} posts from HTML")
             return posts
 
         except Exception as e:
-            logger.error(f"HTML parsing failed: {e}")
+            logger.error(f"HTML parsing failed: {type(e).__name__} - {e}", exc_info=True)
             return []
 
     def _parse_date(self, date_str: Optional[str]) -> int:

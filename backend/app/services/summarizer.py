@@ -1,27 +1,28 @@
-"""Text summarization service using OpenAI."""
+"""Text summarization service using Ollama (local LLM)."""
 
 import logging
 
-import openai
+import httpx
 
 logger = logging.getLogger(__name__)
 
 
 class Summarizer:
-    """AI-powered text summarization service."""
+    """AI-powered text summarization service using Ollama."""
 
-    def __init__(self, api_key: str):
-        """Initialize OpenAI client.
+    def __init__(self, ollama_host: str = "http://localhost:11434"):
+        """Initialize Ollama client.
 
         Args:
-            api_key: OpenAI API key
+            ollama_host: Ollama server URL (default: http://localhost:11434)
         """
-        self.api_key = api_key
-        openai.api_key = api_key
-        logger.info("Initialized Summarizer with OpenAI API")
+        self.ollama_host = ollama_host
+        self.model = "mistral"  # Using Mistral 7B for best performance on your hardware
+        self.client = httpx.AsyncClient(timeout=300.0)  # 5 minutes for slower hardware
+        logger.info(f"Initialized Summarizer with Ollama (model: {self.model}, host: {ollama_host})")
 
     async def summarize(self, text: str, max_length: int = 200) -> str:
-        """Summarize text using OpenAI.
+        """Summarize text using Ollama.
 
         Args:
             text: Text to summarize
@@ -34,25 +35,33 @@ class Summarizer:
             return ""
 
         try:
-            response = await openai.ChatCompletion.acreate(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"Summarize this in under {max_length} words, focusing on key points:\n\n{text}"
-                    }
-                ],
-                temperature=0.7,
-                max_tokens=max_length,
-                timeout=10
+            prompt = f"Summarize this in under {max_length} words, focusing on key points:\n\n{text}"
+
+            response = await self.client.post(
+                f"{self.ollama_host}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "temperature": 0.7,
+                },
+                timeout=300.0  # 5 minutes for slower hardware
             )
 
-            summary = response.choices[0].message.content.strip()
+            if response.status_code != 200:
+                raise Exception(f"Ollama API returned {response.status_code}")
+
+            result = response.json()
+            summary = result.get("response", "").strip()
+
+            if not summary:
+                raise Exception("Empty response from Ollama")
+
             logger.info(f"Summarized {len(text)} chars to {len(summary)} chars")
             return summary
 
         except Exception as e:
-            logger.warning(f"OpenAI summarization failed: {e}, using fallback")
+            logger.warning(f"Ollama summarization failed: {e}, using fallback")
             # Fallback: return first N words
             words = text.split()[:max_length]
             return " ".join(words)
