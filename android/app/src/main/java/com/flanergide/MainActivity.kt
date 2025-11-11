@@ -107,12 +107,19 @@ fun MainScreen() {
                     name = "Draw over other apps",
                     granted = permissions.systemAlertWindow
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                PermissionRow(
+                    name = "Text Capture (Accessibility)",
+                    granted = permissions.accessibilityService
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Request Permission Button
+        // Request Permissions Buttons
         if (!permissions.systemAlertWindow) {
             Button(
                 onClick = { PermissionManager.requestSystemAlertWindow() },
@@ -124,13 +131,38 @@ fun MainScreen() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "This permission is required to show scrolling messages",
+                text = "Required to show scrolling messages",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
-        } else {
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (!permissions.accessibilityService) {
+            Button(
+                onClick = { PermissionManager.requestAccessibilityService() },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary
+                )
+            ) {
+                Text("Enable Text Capture")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = "✨ All set! Messages will appear on your screen",
+                text = "Required to capture your typing for AI context",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+
+        if (permissions.systemAlertWindow && permissions.accessibilityService) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "✨ All permissions granted! Ready to go",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Green
             )

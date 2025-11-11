@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.flanergide.ai.AIOrchestrator
 import com.flanergide.core.StateStore
+import com.flanergide.data.TextCaptureEngine
 import com.flanergide.overlay.OverlayEngine
 import com.flanergide.permissions.PermissionManager
 import kotlinx.coroutines.CoroutineScope
@@ -90,11 +91,15 @@ class RealityService : Service() {
         PermissionManager.init(applicationContext, serviceScope)
         Log.d(tag, "✓ PermissionManager initialized")
 
-        // 3. Initialize OverlayEngine (subscribes to state changes)
+        // 3. Initialize TextCaptureEngine (captures text from accessibility service)
+        TextCaptureEngine.init(applicationContext, serviceScope)
+        Log.d(tag, "✓ TextCaptureEngine initialized")
+
+        // 4. Initialize OverlayEngine (subscribes to state changes)
         OverlayEngine.init(applicationContext, serviceScope)
         Log.d(tag, "✓ OverlayEngine initialized")
 
-        // 4. Initialize AIOrchestrator (loads model and starts generating messages)
+        // 5. Initialize AIOrchestrator (loads model and starts generating messages)
         AIOrchestrator.init(applicationContext, serviceScope)
         Log.d(tag, "✓ AIOrchestrator initialized")
 

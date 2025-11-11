@@ -57,12 +57,20 @@ object TextCaptureEngine {
     fun addCapturedText(text: String, appPackage: String) {
         if (text.isBlank()) return
 
+        Log.v(TAG, "Raw text captured from $appPackage (${text.length} chars): ${text.take(50)}...")
+
         // Apply context-aware redaction
         val redactedText = SensitiveDataRedactor.redactForApp(text, appPackage)
 
+        // Check if text was redacted
+        val wasRedacted = text != redactedText
+        if (wasRedacted) {
+            Log.d(TAG, "Sensitive data redacted. Before: ${text.take(50)}... → After: ${redactedText.take(50)}...")
+        }
+
         // Skip if redaction resulted in generic placeholder (e.g., password manager activity)
         if (redactedText == "[PASSWORD_MANAGER_ACTIVITY]") {
-            Log.d(TAG, "Skipping password manager activity")
+            Log.d(TAG, "Skipping password manager activity (redacted entirely)")
             return
         }
 
@@ -81,9 +89,10 @@ object TextCaptureEngine {
             if (capturedTextLog.size > MAX_LOG_SIZE) {
                 capturedTextLog.removeAt(0)
             }
-        }
 
-        Log.d(TAG, "Captured text from $appPackage: ${redactedText.take(50)}...")
+            val currentSize = capturedTextLog.size
+            Log.i(TAG, "✓ Captured from $appPackage: \"${redactedText.take(60)}...\" (log size: $currentSize/$MAX_LOG_SIZE)")
+        }
     }
 
     /**
