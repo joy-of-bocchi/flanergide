@@ -9,43 +9,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="743fc7f5-063d-4a37-bd99-3a8f87a56b65" name="Changes" comment="removed unreadable fonts">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BUILD_VERIFICATION.md" beforeDir="false" afterPath="$PROJECT_DIR$/BUILD_VERIFICATION.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/androidTest/java/com/example/realityskin/ExampleInstrumentedTest.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/MainActivity.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/RealityService.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/ai/AIOrchestrator.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/ai/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/ai/GGUFModel.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/ai/MLModel.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/ai/MessageGenerator.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/core/AppState.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/core/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/core/EventBus.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/core/Events.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/core/StateStore.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/fonts/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/fonts/FontProvider.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/guardian/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/overlay/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/overlay/OverlayEngine.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/overlay/composables/ScrollingMessageOverlay.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/permissions/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/permissions/PermissionManager.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/realityskin/storage/CLAUDE.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values-night/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values-night/themes.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/test/java/com/example/realityskin/ExampleUnitTest.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/convert_phi2_to_gguf.py" beforeDir="false" afterPath="$PROJECT_DIR$/convert_phi2_to_gguf.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
-    </list>
+    <list default="true" id="743fc7f5-063d-4a37-bd99-3a8f87a56b65" name="Changes" comment="removed unreadable fonts" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -54,7 +18,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/mattcho/.android/avd/Medium_Phone.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=/Users/mattcho/.android/avd/Medium_Phone_2.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -84,7 +48,7 @@
     </system>
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="ProblemsViewState">
@@ -106,12 +70,13 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "com.google.services.firebase.aqiPopupShown": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/mattcho/AndroidStudioProjects/Flanergide",
+    "last_opened_file_path": "/Users/mattcho/AndroidStudioProjects/Flanergide/android",
     "settings.editor.selected.configurable": "experimental"
   }
 }]]></component>
@@ -122,7 +87,7 @@
   </component>
   <component name="RunManager">
     <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
-      <module name="Flanergide.app" />
+      <module name="Flanergide-Android.app" />
       <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
       <option name="DEPLOY" value="true" />
       <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
@@ -275,5 +240,31 @@
         </breakpoint>
       </breakpoints>
     </breakpoint-manager>
+  </component>
+  <component name="play_dynamic_filters_status">
+    <option name="appIdToCheckInfo">
+      <map>
+        <entry key="com.flanergide">
+          <value>
+            <CheckInfo lastCheckTimestamp="1762893644802" />
+          </value>
+        </entry>
+        <entry key="com.flanergide.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1762893644802" />
+          </value>
+        </entry>
+        <entry key="com.realityskin">
+          <value>
+            <CheckInfo lastCheckTimestamp="1762893250493" />
+          </value>
+        </entry>
+        <entry key="com.realityskin.test">
+          <value>
+            <CheckInfo lastCheckTimestamp="1762893250482" />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

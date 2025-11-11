@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.realityskin"
+    namespace = "com.flanergide"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.realityskin"
+        applicationId = "com.flanergide"
         minSdk = 33
         targetSdk = 34
         versionCode = 1

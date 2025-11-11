@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">RealitySkin</string>
+    <string name="app_name">Flanergide</string>
+    <string name="accessibility_service_description">Flanergide accessibility service for text capture</string>
 </resources>
