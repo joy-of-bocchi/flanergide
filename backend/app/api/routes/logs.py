@@ -5,7 +5,7 @@ import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.security import HTTPAuthCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 from app.api.middleware.auth import verify_jwt
 from app.config import settings
@@ -39,7 +39,7 @@ async def get_vector_store(request: Request) -> VectorStore:
 async def upload_logs(
     request: Request,
     upload_req: CapturedTextLogsUploadRequest,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ) -> CapturedTextLogsUploadResponse:
     """Upload batch of captured text logs from device.
@@ -59,12 +59,18 @@ async def upload_logs(
     Raises:
         HTTPException: If authentication fails or upload fails
     """
+    # Log incoming request
+    logger.info(f"=== Received log upload request ===")
+    logger.info(f"Number of logs: {len(upload_req.logs)}")
+    logger.info(f"Client IP: {request.client.host if request.client else 'unknown'}")
+
     # Verify JWT
     try:
         payload = await verify_jwt(
             credentials, settings.jwt_secret, settings.jwt_algorithm
         )
         device_id = payload.get("sub", "unknown")
+        logger.info(f"Authenticated device: {device_id}")
     except HTTPException as e:
         logger.warning(f"JWT verification failed: {e.detail}")
         raise
@@ -76,6 +82,14 @@ async def upload_logs(
     # Process each log entry
     for idx, log_entry in enumerate(upload_req.logs):
         try:
+            # Log the received entry
+            logger.info(
+                f"Log entry {idx+1}/{len(upload_req.logs)}: "
+                f"app={log_entry.appPackage}, "
+                f"text='{log_entry.text[:100]}...', "
+                f"timestamp={log_entry.timestamp}"
+            )
+
             # Create event for vector store
             event_data = {
                 "type": "captured_text",
@@ -90,13 +104,13 @@ async def upload_logs(
 
             if event_id:
                 uploaded_count += 1
-                logger.debug(
-                    f"Stored log {event_id}: {log_entry.appPackage} - "
-                    f"{log_entry.text[:50]}..."
+                logger.info(
+                    f"Successfully stored log {event_id}: {log_entry.appPackage}"
                 )
             else:
                 failed_count += 1
                 failed_indices.append(idx)
+                logger.warning(f"Failed to store log entry {idx}")
 
         except Exception as e:
             logger.error(f"Failed to store log entry {idx}: {e}")
@@ -131,7 +145,7 @@ async def upload_logs(
 async def search_logs(
     request: Request,
     search_req: CapturedTextLogsSearchRequest,
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
 ) -> CapturedTextLogsSearchResponse:
     """Semantic search over captured text logs.

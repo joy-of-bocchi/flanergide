@@ -173,14 +173,23 @@ Your backend is now running on **free, private, local AI** instead of OpenAI!
 - ✅ 100% private (offline)
 - ✅ Same functionality as before
 
-**Next step**: Start Ollama server and run backend!
+**Next step**: Start all required services!
 
 ```bash
 # Terminal 1: Ollama server
 ollama serve
 
-# Terminal 2: Backend
-python -m uvicorn app.main:app --reload
+# Terminal 2: Cloudflare Tunnel (exposes backend publicly)
+cd backend
+./cloudflared.exe tunnel run flanergide
+
+# Terminal 3: Backend
+cd backend
+./venv/Scripts/python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
+
+Your backend will be accessible at:
+- **Local**: http://localhost:8000
+- **Public**: https://api.flan-app-tunnel.uk
 
 Happy building! 🚀

@@ -69,3 +69,6 @@ htmlcov/
 # OS
 .DS_Store
 Thumbs.db
+
+#cloudflare
+cloudflared.exe
