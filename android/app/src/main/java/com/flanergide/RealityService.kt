@@ -11,8 +11,11 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.flanergide.BuildConfig
 import com.flanergide.ai.AIOrchestrator
 import com.flanergide.core.StateStore
+import com.flanergide.data.LogUploader
+import com.flanergide.data.NetworkManager
 import com.flanergide.data.TextCaptureEngine
 import com.flanergide.overlay.OverlayEngine
 import com.flanergide.permissions.PermissionManager
@@ -91,15 +94,25 @@ class RealityService : Service() {
         PermissionManager.init(applicationContext, serviceScope)
         Log.d(tag, "✓ PermissionManager initialized")
 
-        // 3. Initialize TextCaptureEngine (captures text from accessibility service)
+        // 3. Initialize NetworkManager (monitors network connectivity)
+        NetworkManager.init(applicationContext, serviceScope)
+        Log.d(tag, "✓ NetworkManager initialized")
+
+        // 4. Initialize TextCaptureEngine (captures text from accessibility service)
         TextCaptureEngine.init(applicationContext, serviceScope)
         Log.d(tag, "✓ TextCaptureEngine initialized")
 
-        // 4. Initialize OverlayEngine (subscribes to state changes)
+        // 5. Initialize LogUploader (batches and uploads captured text logs)
+        LogUploader.init(applicationContext, serviceScope, BuildConfig.JWT_TOKEN)
+        LogUploader.serverUrl = BuildConfig.SERVER_URL
+        Log.d(tag, "✓ LogUploader initialized")
+        Log.d(tag, "  Server: ${BuildConfig.SERVER_URL}")
+
+        // 6. Initialize OverlayEngine (subscribes to state changes)
         OverlayEngine.init(applicationContext, serviceScope)
         Log.d(tag, "✓ OverlayEngine initialized")
 
-        // 5. Initialize AIOrchestrator (loads model and starts generating messages)
+        // 7. Initialize AIOrchestrator (loads model and starts generating messages)
         AIOrchestrator.init(applicationContext, serviceScope)
         Log.d(tag, "✓ AIOrchestrator initialized")
 

