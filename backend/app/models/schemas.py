@@ -277,3 +277,112 @@ class ErrorResponse(BaseModel):
 
     error: ErrorDetail = Field(..., description="Error information")
     timestamp: int = Field(..., description="Error timestamp")
+
+
+# ============================================================================
+# Captured Text Logs
+# ============================================================================
+
+
+class CapturedTextLogEntry(BaseModel):
+    """Single captured text log entry from device."""
+
+    text: str = Field(..., min_length=1, description="Redacted captured text")
+    appPackage: str = Field(..., description="Source app package (e.g., com.instagram.android)")
+    timestamp: int = Field(..., description="Unix timestamp in milliseconds")
+    deviceId: str = Field(default="unknown", description="Device identifier")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "text": "hey how are you doing",
+                "appPackage": "com.instagram.android",
+                "timestamp": 1699888888000,
+                "deviceId": "pixel-7-abc123"
+            }
+        }
+
+
+class CapturedTextLogsUploadRequest(BaseModel):
+    """Request to upload batch of captured text logs."""
+
+    logs: list[CapturedTextLogEntry] = Field(
+        ..., min_items=1, max_items=200, description="Batch of text logs"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "logs": [
+                    {
+                        "text": "working on features",
+                        "appPackage": "com.vscode",
+                        "timestamp": 1699888900000,
+                        "deviceId": "pixel-7-abc123"
+                    },
+                    {
+                        "text": "lets grab coffee",
+                        "appPackage": "com.instagram.android",
+                        "timestamp": 1699888905000,
+                        "deviceId": "pixel-7-abc123"
+                    }
+                ]
+            }
+        }
+
+
+class CapturedTextLogsUploadResponse(BaseModel):
+    """Response from text logs upload."""
+
+    uploaded: int = Field(..., ge=0, description="Number of logs uploaded")
+    failed: int = Field(..., ge=0, description="Number of logs that failed")
+    status: str = Field(..., description="Overall status (success/partial/failed)")
+    message: str = Field(..., description="Status message")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "uploaded": 15,
+                "failed": 0,
+                "status": "success",
+                "message": "15 logs stored successfully"
+            }
+        }
+
+
+class CapturedTextLogsSearchRequest(BaseModel):
+    """Request to search captured text logs."""
+
+    query: str = Field(..., min_length=1, description="Search query")
+    limit: int = Field(default=20, ge=1, le=100, description="Results limit")
+    appPackage: Optional[str] = Field(default=None, description="Filter by app package")
+    timestamp_min: Optional[int] = Field(default=None, description="Minimum timestamp (ms)")
+    timestamp_max: Optional[int] = Field(default=None, description="Maximum timestamp (ms)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "query": "instagram messages",
+                "limit": 20,
+                "appPackage": "com.instagram.android"
+            }
+        }
+
+
+class CapturedTextLogsSearchResult(BaseModel):
+    """Single search result from text logs."""
+
+    id: str = Field(..., description="Log entry ID")
+    text: str = Field(..., description="Captured text")
+    appPackage: str = Field(..., description="Source app package")
+    timestamp: int = Field(..., description="Timestamp (ms)")
+    deviceId: str = Field(..., description="Device ID")
+    similarity_score: Optional[float] = Field(default=None, ge=0, le=1, description="Similarity score")
+
+
+class CapturedTextLogsSearchResponse(BaseModel):
+    """Response from text logs search."""
+
+    results: list[CapturedTextLogsSearchResult] = Field(..., description="Search results")
+    count: int = Field(..., description="Number of results")
+    total: int = Field(..., description="Total matching entries")

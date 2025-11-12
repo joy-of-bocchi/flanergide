@@ -15,7 +15,7 @@ from app.api.middleware.security import (
     rate_limit_check_middleware,
     setup_cors,
 )
-from app.api.routes import memory, state, sync
+from app.api.routes import logs, memory, state, sync
 from app.config import settings
 from app.services.blog_scraper import BlogScraper
 from app.services.state_manager import StateManager
@@ -228,6 +228,7 @@ async def health_check():
 
 
 # Include routers
+app.include_router(logs.router)
 app.include_router(memory.router)
 app.include_router(state.router)
 app.include_router(sync.router)
