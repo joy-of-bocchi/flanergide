@@ -44,4 +44,9 @@ sealed class AppEvent {
         val permission: Permission,
         val granted: Boolean
     ) : AppEvent()
+
+    /**
+     * Emitted when LLM message generation is toggled on/off.
+     */
+    data class LLMToggle(val enabled: Boolean) : AppEvent()
 }

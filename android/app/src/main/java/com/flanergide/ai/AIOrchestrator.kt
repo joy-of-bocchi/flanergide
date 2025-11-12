@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import com.flanergide.core.AppEvent
 import com.flanergide.core.EventBus
+import com.flanergide.core.StateStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -26,6 +27,7 @@ object AIOrchestrator {
     private lateinit var application: Application
     private var mlModel: MLModel? = null
     private var isGenerating = false
+    private var isEnabled = false
 
     /**
      * Initialize AIOrchestrator.
@@ -37,6 +39,14 @@ object AIOrchestrator {
     fun init(appContext: Context, scope: CoroutineScope) {
         application = appContext.applicationContext as Application
         Log.i(TAG, "Initializing AIOrchestrator")
+
+        // Subscribe to LLM enabled state changes
+        scope.launch {
+            StateStore.appState.collect { state ->
+                isEnabled = state.llmEnabled
+                Log.d(TAG, "LLM ${if (isEnabled) "enabled" else "disabled"}")
+            }
+        }
 
         // Load model asynchronously
         scope.launch {
@@ -96,6 +106,9 @@ object AIOrchestrator {
      * Generate a message from a random prompt and emit to EventBus.
      */
     private suspend fun generateAndEmitMessage() {
+        // Skip generation if LLM is disabled
+        if (!isEnabled) return
+
         isGenerating = true
 
         try {

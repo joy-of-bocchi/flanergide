@@ -3,15 +3,21 @@ package com.flanergide
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import com.flanergide.core.AppEvent
+import com.flanergide.core.EventBus
 import com.flanergide.core.StateStore
 import com.flanergide.permissions.PermissionManager
+import kotlinx.coroutines.launch
 
 /**
  * MainActivity - Simple launcher activity for RealitySkin.
@@ -45,6 +51,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val appState by StateStore.appState.collectAsState()
     val permissions = appState.permissions
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -166,6 +173,44 @@ fun MainScreen() {
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Green
             )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // LLM Feature Toggle
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "AI Message Generation",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (appState.llmEnabled) "Enabled" else "Disabled",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (appState.llmEnabled) Color.Green else Color.Gray
+                    )
+                }
+                Switch(
+                    checked = appState.llmEnabled,
+                    onCheckedChange = { enabled ->
+                        // Emit toggle event through EventBus
+                        val activity = (context as? ComponentActivity)
+                        activity?.lifecycleScope?.launch {
+                            EventBus.emit(AppEvent.LLMToggle(enabled))
+                        }
+                    }
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))

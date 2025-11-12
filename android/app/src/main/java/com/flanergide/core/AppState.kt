@@ -13,7 +13,8 @@ data class AppState(
         OverlayType.SCROLLING_MESSAGE to true,
         OverlayType.AVATAR to false,
         OverlayType.MINI_GAME to false
-    )
+    ),
+    val llmEnabled: Boolean = false
 )
 
 /**
