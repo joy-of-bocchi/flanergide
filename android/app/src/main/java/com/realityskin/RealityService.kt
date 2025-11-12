@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.realityskin.ai.AIOrchestrator
 import com.realityskin.core.StateStore
+import com.realityskin.data.TextCaptureEngine
 import com.realityskin.overlay.OverlayEngine
 import com.realityskin.permissions.PermissionManager
 import kotlinx.coroutines.CoroutineScope
@@ -90,11 +91,15 @@ class RealityService : Service() {
         PermissionManager.init(applicationContext, serviceScope)
         Log.d(tag, "✓ PermissionManager initialized")
 
-        // 3. Initialize OverlayEngine (subscribes to state changes)
+        // 3. Initialize TextCaptureEngine (captures keystrokes via accessibility service)
+        TextCaptureEngine.init(applicationContext, serviceScope)
+        Log.d(tag, "✓ TextCaptureEngine initialized")
+
+        // 4. Initialize OverlayEngine (subscribes to state changes)
         OverlayEngine.init(applicationContext, serviceScope)
         Log.d(tag, "✓ OverlayEngine initialized")
 
-        // 4. Initialize AIOrchestrator (loads model and starts generating messages)
+        // 5. Initialize AIOrchestrator (loads model and starts generating messages)
         AIOrchestrator.init(applicationContext, serviceScope)
         Log.d(tag, "✓ AIOrchestrator initialized")
 
