@@ -72,6 +72,11 @@ object StateStore {
                     permissions = state.permissions.update(event.permission, event.granted)
                 )
             }
+
+            is AppEvent.LLMToggle -> {
+                Log.d(TAG, "LLM toggled: ${event.enabled}")
+                state.copy(llmEnabled = event.enabled)
+            }
         }
     }
 

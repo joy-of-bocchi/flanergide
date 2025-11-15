@@ -16,6 +16,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Expose gradle.properties values to app code
+        buildConfigField("String", "JWT_TOKEN", "\"${project.properties["JWT_TOKEN"] ?: ""}\"")
+        buildConfigField("String", "SERVER_URL", "\"${project.properties["SERVER_URL"] ?: ""}\"")
     }
 
     buildTypes {
@@ -39,6 +43,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     // Prevent compression of GGUF model files
