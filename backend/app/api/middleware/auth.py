@@ -33,10 +33,13 @@ async def verify_jwt(
     """
     try:
         token = credentials.credentials
+        # Add 5 hour leeway to handle time sync issues between client and server
         payload = jwt.decode(
             token,
             jwt_secret,
-            algorithms=[jwt_algorithm]
+            algorithms=[jwt_algorithm],
+            options={"verify_iat": True},
+            leeway=timedelta(hours=5)
         )
         device_id = payload.get("sub")
         if not device_id:
