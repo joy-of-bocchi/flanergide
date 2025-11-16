@@ -1,0 +1,52 @@
+{
+  "logs": [
+    {
+      "text": "Working on the commentary system implementation. Building API endpoints and services for daily analysis.",
+      "appPackage": "com.android.vscode",
+      "timestamp": 1731686400000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "Researching how to integrate ChromaDB with LLM-based analysis. Reading documentation about vector embeddings.",
+      "appPackage": "com.brave.browser",
+      "timestamp": 1731682800000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "hey what time should we meet for lunch? maybe around 1pm?",
+      "appPackage": "com.instagram.android",
+      "timestamp": 1731679200000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "Debugging the log accumulator service. Fixed file path issues and tested append functionality.",
+      "appPackage": "com.android.vscode",
+      "timestamp": 1731675600000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "Reading documentation about vector databases and semantic search. Understanding cosine similarity.",
+      "appPackage": "com.brave.browser",
+      "timestamp": 1731672000000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "Implementing the CommentaryService class. Need to handle blog post filtering by date.",
+      "appPackage": "com.android.vscode",
+      "timestamp": 1731668400000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "Looking up Ollama API documentation for text generation parameters",
+      "appPackage": "com.brave.browser",
+      "timestamp": 1731664800000,
+      "deviceId": "test-device-001"
+    },
+    {
+      "text": "sounds good! see you then",
+      "appPackage": "com.instagram.android",
+      "timestamp": 1731661200000,
+      "deviceId": "test-device-001"
+    }
+  ]
+}

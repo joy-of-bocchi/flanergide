@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     # Storage Paths
     chroma_persist_dir: str = Field(default="./app/storage/chroma_db", description="Chroma persistence directory")
     state_dir: str = Field(default="./app/storage/state", description="State directory")
+    analysis_dir: str = Field(default="./app/storage/analysis", description="Summarization analysis directory")
 
     # Feature Flags
     enable_rate_limiting: bool = Field(default=True, description="Enable rate limiting")
@@ -45,5 +46,17 @@ class Settings(BaseSettings):
         case_sensitive = False
 
 
-# Load settings on module import
-settings = Settings()
+# Singleton instance - use get_settings() for dependency injection
+_settings_instance = None
+
+
+def get_settings() -> Settings:
+    """Get or create settings singleton instance."""
+    global _settings_instance
+    if _settings_instance is None:
+        _settings_instance = Settings()
+    return _settings_instance
+
+
+# Load settings on module import for backward compatibility
+settings = get_settings()

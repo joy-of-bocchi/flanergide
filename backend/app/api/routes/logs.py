@@ -16,6 +16,7 @@ from app.models.schemas import (
     CapturedTextLogsUploadRequest,
     CapturedTextLogsUploadResponse,
 )
+from app.services.log_accumulator import LogAccumulator
 from app.services.vector_store import VectorStore
 
 logger = logging.getLogger(__name__)
@@ -35,12 +36,25 @@ async def get_vector_store(request: Request) -> VectorStore:
     return request.app.state.vector_store
 
 
+async def get_log_accumulator(request: Request) -> LogAccumulator:
+    """Get log accumulator from app state.
+
+    Args:
+        request: HTTP request
+
+    Returns:
+        LogAccumulator instance
+    """
+    return request.app.state.log_accumulator
+
+
 @router.post("/upload", response_model=CapturedTextLogsUploadResponse, status_code=201)
 async def upload_logs(
     request: Request,
     upload_req: CapturedTextLogsUploadRequest,
     credentials = Depends(security),
     vector_store: VectorStore = Depends(get_vector_store),
+    log_accumulator: LogAccumulator = Depends(get_log_accumulator),
 ) -> CapturedTextLogsUploadResponse:
     """Upload batch of captured text logs from device.
 
@@ -107,6 +121,18 @@ async def upload_logs(
                 logger.info(
                     f"Successfully stored log {event_id}: {log_entry.appPackage}"
                 )
+
+                # Also accumulate to daily log file for summarization analysis
+                try:
+                    log_accumulator.append_text_log(
+                        text=log_entry.text,
+                        app_package=log_entry.appPackage,
+                        timestamp=log_entry.timestamp,
+                        device_id=log_entry.deviceId or device_id
+                    )
+                except Exception as e:
+                    # Log but don't fail the upload if accumulation fails
+                    logger.warning(f"Failed to accumulate log to file: {e}")
             else:
                 failed_count += 1
                 failed_indices.append(idx)

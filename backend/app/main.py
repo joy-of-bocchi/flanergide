@@ -15,9 +15,11 @@ from app.api.middleware.security import (
     rate_limit_check_middleware,
     setup_cors,
 )
-from app.api.routes import logs, memory, state, sync
+from app.api.routes import summarization, logs, memory, state, sync
 from app.config import settings
 from app.services.blog_scraper import BlogScraper
+from app.services.summarization_service import SummarizationService
+from app.services.log_accumulator import LogAccumulator
 from app.services.state_manager import StateManager
 from app.services.summarizer import Summarizer
 from app.services.vector_store import VectorStore
@@ -169,6 +171,7 @@ async def startup_event():
         # Create storage directories
         os.makedirs(settings.chroma_persist_dir, exist_ok=True)
         os.makedirs(settings.state_dir, exist_ok=True)
+        os.makedirs(settings.analysis_dir, exist_ok=True)
         logger.info(f"Storage directories ready: {settings.chroma_persist_dir}")
 
         # Initialize services
@@ -193,6 +196,21 @@ async def startup_event():
         summarizer = Summarizer(settings.ollama_host)
         app.state.summarizer = summarizer
         logger.info(f"Summarizer initialized with Ollama at {settings.ollama_host}")
+
+        # Log accumulator (for summarization system)
+        log_accumulator = LogAccumulator(settings.analysis_dir)
+        app.state.log_accumulator = log_accumulator
+        logger.info(f"Log accumulator initialized at {settings.analysis_dir}")
+
+        # Summarization service
+        summarization_service = SummarizationService(
+            log_accumulator=log_accumulator,
+            state_manager=state_manager,
+            summarizer=summarizer,
+            analysis_dir=settings.analysis_dir
+        )
+        app.state.summarization_service = summarization_service
+        logger.info("Summarization service initialized")
 
         logger.info("All services initialized successfully")
         logger.info("=" * 80)
@@ -232,6 +250,7 @@ app.include_router(logs.router)
 app.include_router(memory.router)
 app.include_router(state.router)
 app.include_router(sync.router)
+app.include_router(summarization.router)
 
 
 # Global exception handlers

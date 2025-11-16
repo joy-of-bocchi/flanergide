@@ -47,6 +47,7 @@ env/
 # Storage (large, regenerable)
 app/storage/chroma_db/
 app/storage/state/
+app/storage/analysis/
 
 # Backups
 backups/

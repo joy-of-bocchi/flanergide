@@ -114,3 +114,52 @@ class Summarizer:
                 summaries.append("")
 
         return summaries
+
+    async def generate_text(
+        self,
+        prompt: str,
+        max_tokens: int = 2000,
+        temperature: float = 0.7
+    ) -> str:
+        """Generate text using Ollama with a custom prompt.
+
+        Used for longer-form generation like summarization analysis.
+
+        Args:
+            prompt: Full prompt to send to LLM
+            max_tokens: Maximum tokens to generate
+            temperature: Sampling temperature (0.0-1.0)
+
+        Returns:
+            Generated text
+        """
+        try:
+            response = await self.client.post(
+                f"{self.ollama_host}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "temperature": temperature,
+                    "options": {
+                        "num_predict": max_tokens
+                    }
+                },
+                timeout=300.0  # 5 minutes for slower hardware
+            )
+
+            if response.status_code != 200:
+                raise Exception(f"Ollama API returned {response.status_code}")
+
+            result = response.json()
+            generated = result.get("response", "").strip()
+
+            if not generated:
+                raise Exception("Empty response from Ollama")
+
+            logger.info(f"Generated {len(generated)} chars from prompt")
+            return generated
+
+        except Exception as e:
+            logger.error(f"Ollama generation failed: {e}", exc_info=True)
+            raise Exception(f"LLM generation failed: {str(e)}")
