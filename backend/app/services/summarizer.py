@@ -17,8 +17,8 @@ class Summarizer:
             ollama_host: Ollama server URL (default: http://localhost:11434)
         """
         self.ollama_host = ollama_host
-        self.model = "mistral"  # Using Mistral 7B for best performance on your hardware
-        self.client = httpx.AsyncClient(timeout=300.0)  # 5 minutes for slower hardware
+        self.model = "llama3.1:8b"  # Using Llama 3.1 8B with 128k context window
+        self.client = httpx.AsyncClient(timeout=240.0)  # 4 minutes timeout
         logger.info(f"Initialized Summarizer with Ollama (model: {self.model}, host: {ollama_host})")
 
     async def summarize(self, text: str, max_length: int = 200) -> str:
@@ -45,7 +45,7 @@ class Summarizer:
                     "stream": False,
                     "temperature": 0.7,
                 },
-                timeout=300.0  # 5 minutes for slower hardware
+                timeout=240.0  # 4 minutes timeout
             )
 
             if response.status_code != 200:
@@ -145,7 +145,7 @@ class Summarizer:
                         "num_predict": max_tokens
                     }
                 },
-                timeout=300.0  # 5 minutes for slower hardware
+                timeout=240.0  # 4 minutes timeout
             )
 
             if response.status_code != 200:

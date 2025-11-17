@@ -15,10 +15,11 @@ from app.api.middleware.security import (
     rate_limit_check_middleware,
     setup_cors,
 )
-from app.api.routes import summarization, logs, memory, state, sync
+from app.api.routes import summarization, logs, memory, state, sync, commentary
 from app.config import settings
 from app.services.blog_scraper import BlogScraper
 from app.services.summarization_service import SummarizationService
+from app.services.commentary_service import CommentaryService
 from app.services.log_accumulator import LogAccumulator
 from app.services.state_manager import StateManager
 from app.services.summarizer import Summarizer
@@ -101,6 +102,44 @@ if settings.enable_rate_limiting:
 # Initialize rate limiter
 if settings.enable_rate_limiting:
     init_rate_limiter(settings.rate_limit_requests_per_minute)
+
+
+# Commentary generation constants
+COMMENTARY_INTERVAL_SECONDS = 300  # Generate commentary every 5 minutes
+
+
+# Background task for commentary generation
+async def run_commentary_task():
+    """Background task to generate commentary periodically."""
+    from app.prompts.commentary_prompts import get_next_prompt
+    from app.services.commentary_service import DEFAULT_DAYS_OF_DATA, DEFAULT_WEEKS_OF_BLOGS
+
+    logger.info("Commentary background task started")
+
+    while True:
+        try:
+            logger.info("Commentary task: Generating periodic commentary")
+
+            # Get next prompt in rotation
+            prompt_template, prompt_index = get_next_prompt()
+
+            # Generate commentary
+            result = await app.state.commentary_service.generate_commentary(
+                days_of_data=DEFAULT_DAYS_OF_DATA,
+                weeks_of_blogs=DEFAULT_WEEKS_OF_BLOGS,
+                prompt=prompt_template,
+                prompt_index=prompt_index
+            )
+
+            logger.info(f"Commentary generated with prompt {prompt_index}: {len(result.commentary)} chars")
+            logger.info(f"Commentary preview: {result.commentary[:200]}...")
+
+        except Exception as e:
+            logger.error(f"Commentary task error: {e}", exc_info=True)
+
+        # Wait for next run
+        logger.info(f"Commentary task: Next run in {COMMENTARY_INTERVAL_SECONDS} seconds")
+        await asyncio.sleep(COMMENTARY_INTERVAL_SECONDS)
 
 
 # Background task for blog scraper
@@ -212,8 +251,21 @@ async def startup_event():
         app.state.summarization_service = summarization_service
         logger.info("Summarization service initialized")
 
+        # Commentary service
+        commentary_service = CommentaryService(
+            log_accumulator=log_accumulator,
+            state_manager=state_manager,
+            summarizer=summarizer
+        )
+        app.state.commentary_service = commentary_service
+        logger.info("Commentary service initialized")
+
         logger.info("All services initialized successfully")
         logger.info("=" * 80)
+
+        # Start background commentary task
+        asyncio.create_task(run_commentary_task())
+        logger.info(f"Commentary background task scheduled (interval: {COMMENTARY_INTERVAL_SECONDS}s)")
 
         # Start background blog scraper task
         if settings.enable_blog_scraper:
@@ -251,6 +303,7 @@ app.include_router(memory.router)
 app.include_router(state.router)
 app.include_router(sync.router)
 app.include_router(summarization.router)
+app.include_router(commentary.router)
 
 
 # Global exception handlers
